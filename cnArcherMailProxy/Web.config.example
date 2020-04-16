@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<configuration>
+  <appSettings>
+    <add key="cnMailServer" value="smtpServer" />
+    <add key="cnUsername" value="username" />
+    <add key="cnPassword" value="password" />
+    <add key="cnFromAddress" value="noreply@something.com" />
+    <add key="cnMailIsSSL" value="true" />
+    <add key="cnMailPort" value="587" />
+  </appSettings>
+    <connectionStrings />
+  
+    <system.web>
+      <httpHandlers>
+        <add verb="POST" path="*.cnMail" type="cnArcherMailProxy.cnMail, cnArcherMailProxy" />
+      </httpHandlers>
+        <compilation debug="true">
+        </compilation>
+    <authentication mode="Windows" />
+    </system.web>
+  <system.webServer>
+    <handlers>
+      <add name="cnArcherMailProxy" path="*.cnMail" verb="POST" modules="IsapiModule" scriptProcessor="%windir%\Microsoft.NET\Framework64\v2.0.50727\aspnet_isapi.dll" resourceType="Unspecified" requireAccess="Script" preCondition="bitness64" />
+    </handlers>
+  </system.webServer>
+</configuration>
