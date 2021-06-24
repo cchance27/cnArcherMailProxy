@@ -4,6 +4,7 @@ to an email containing a cnArcher file that can be used to generate a mobile wor
 The HTTP Handler handles posts to *.cnMail for example http://localhost/send.cnMail
 
 Example JSON expected by this HTTP Handler:
+```json
 {
 	"name": "Someones Name",
 	"Date": "2020-04-04",
@@ -23,9 +24,10 @@ Example JSON expected by this HTTP Handler:
 	"Notes": "This is a bunch of information that i think could be helpful.",
 	"Firmware": "16.1.1"
 }
+```
 
 Once your DLL is built and copied to your webapps /bin directory some adjustments are required to EngageIP's web.config to enable the new handler.
-
+```xml
 <configuration>
   <appSettings>
 	<add key="cnMailServer" value="my.emailserver.com" />
@@ -47,3 +49,4 @@ Once your DLL is built and copied to your webapps /bin directory some adjustment
     </handlers>
   </system.webServer>
 </configuration>
+```
