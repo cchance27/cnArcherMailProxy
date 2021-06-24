@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Web.SessionState;
 
 namespace cnArcherMailProxy
@@ -22,18 +23,13 @@ namespace cnArcherMailProxy
         public string Firmware { get; set; }
         public string Package { get; set; }
 
-    public string ToCnArcherJSON(HttpSessionState session)
+    public string ToCnArcherJSON()
         {
             var singleLineAddress = Address.Replace("\n", ",");
 
 
             // TODO: Proper serialization instead of hand writing
             string output = "";
-            if (session == null)
-            {
-                throw new UnauthorizedAccessException();
-            }
-
             output = 
                 $"{{ "+
                 $"    \"type\":\"cnArcherWO\"," +
@@ -54,8 +50,7 @@ namespace cnArcherMailProxy
                 $"    \"nat\": false," +
                 $"    \"ip_setting\": \"dhcp\"," +
                 $"    \"comments\": \"Install {Date} by {Tech}\", " +
-                $"    \"firmware\": \"{Firmware}\", " +
-                $"    \"sessionInfo\": \"{session.Keys.ToString()}\"" +
+                $"    \"firmware\": \"{Firmware}\"" +
                 $"}}";
             return output;
         }

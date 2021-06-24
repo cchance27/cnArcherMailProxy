@@ -36,6 +36,11 @@ namespace cnArcherMailProxy
                 throw new ArgumentNullException(nameof(context), "The context or session was empty!");
             }
 
+            if (context.Session["UserID"] is null)
+            {
+                throw new UnauthorizedAccessException("You must be logged into EngageIP to use the cnMail Endpoint.");
+            }
+
             HttpRequest Request = context.Request;
             HttpResponse Response = context.Response;
 
@@ -43,11 +48,11 @@ namespace cnArcherMailProxy
             MailRequest jsonRequest = JsonConvert.DeserializeObject<MailRequest>(stream.ReadToEnd());
             stream.Dispose();
 
-            var result = composeMailAndSend(jsonRequest, context.Session);
+            var result = composeMailAndSend(jsonRequest);
             if (result)
             {
                 Response.ContentType = "text/json";
-                Response.Write(jsonRequest.ToCnArcherJSON(context.Session));
+                Response.Write(jsonRequest.ToCnArcherJSON());
             } else
             {
                 throw new SmtpException("Failed to send message!");
@@ -64,7 +69,7 @@ namespace cnArcherMailProxy
             return String.Join(", ", phoneArray);
         }
 
-        public static bool composeMailAndSend(MailRequest mailInfo, HttpSessionState session)
+        public static bool composeMailAndSend(MailRequest mailInfo)
         {
             if (mailInfo is null)
             {
@@ -92,7 +97,7 @@ namespace cnArcherMailProxy
             _m.Subject = $"New Workorder [{mailInfo.Date}]: {mailInfo.Name} ({mailInfo.EIP})";
             _m.Body = MailText;
 
-            var textBytes = System.Text.Encoding.UTF8.GetBytes(mailInfo.ToCnArcherJSON(session));
+            var textBytes = System.Text.Encoding.UTF8.GetBytes(mailInfo.ToCnArcherJSON());
             MemoryStream ms = new MemoryStream(textBytes, 0, textBytes.Length);
             _m.Attachments.Add(new Attachment(ms, $"{mailInfo.ESN}.cnarcher"));
 
