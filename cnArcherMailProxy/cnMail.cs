@@ -20,7 +20,7 @@ namespace cnArcherMailProxy
         public cnMail()
         {
             if (String.IsNullOrEmpty(_cnMailServer) || String.IsNullOrEmpty(_cnUsername) || String.IsNullOrEmpty(_cnPassword) || String.IsNullOrEmpty(_cnFromAddress))
-                throw new ArgumentNullException("You must provide cnMailServer, cnMailPort, cnMailIsSSL, cnUsername, cnPassword, cnFromAddress as part of webconfig.");
+                throw new Exception("You must provide cnMailServer, cnMailPort, cnMailIsSSL, cnUsername, cnPassword, cnFromAddress as part of webconfig.");
         }
 
         public bool IsReusable
@@ -104,14 +104,18 @@ namespace cnArcherMailProxy
             try
             {
                 _smtp.Send(_m);
-                _m.Dispose();
-                return true;
             }
             catch (SmtpException e)
             {
-                _m.Dispose();
                 throw;
             }
+            finally
+            {
+                _m.Dispose();
+                _smtp.Dispose();
+            }
+
+            return true;
         }
     }
 }

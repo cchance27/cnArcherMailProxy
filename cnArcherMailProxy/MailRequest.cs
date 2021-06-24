@@ -2,27 +2,29 @@
 {
     public class MailRequest
     {
-        public string Name;
-        public string Date;
-        public string Tech;
-        public string TechEmail;
-        public string ESN;
-        public string Company;
-        public string EIP;
-        public string Account;
-        public string Phones;
-        public string Address;
-        public string Username;
-        public string Password;
-        public string VLAN;
-        public string Notes;
-        public string Firmware;
-        public string Package;
+        public string Name { get; set; }
+        public string Date { get; set; }
+        public string Tech { get; set; }
+        public string TechEmail { get; set; }
+        public string ESN { get; set; }
+        public string Company { get; set; }
+        public string EIP { get; set; }
+        public string Account { get; set; }
+        public string Phones { get; set; }
+        public string Address { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string VLAN { get; set; }
+        public string Notes { get; set; }
+        public string Firmware { get; set; }
+        public string Package { get; set; }
 
-        public string ToCnArcherJSON()
+    public string ToCnArcherJSON()
         {
             var singleLineAddress = Address.Replace("\n", ",");
 
+
+            // TODO: Proper serialization instead of hand writing
             string output = "";
             output = 
                 $"{{ "+
