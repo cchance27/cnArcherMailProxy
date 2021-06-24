@@ -1,4 +1,7 @@
-﻿namespace cnArcherMailProxy
+﻿using System;
+using System.Web.SessionState;
+
+namespace cnArcherMailProxy
 {
     public class MailRequest
     {
@@ -19,13 +22,18 @@
         public string Firmware { get; set; }
         public string Package { get; set; }
 
-    public string ToCnArcherJSON()
+    public string ToCnArcherJSON(HttpSessionState session)
         {
             var singleLineAddress = Address.Replace("\n", ",");
 
 
             // TODO: Proper serialization instead of hand writing
             string output = "";
+            if (session == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             output = 
                 $"{{ "+
                 $"    \"type\":\"cnArcherWO\"," +
@@ -46,7 +54,8 @@
                 $"    \"nat\": false," +
                 $"    \"ip_setting\": \"dhcp\"," +
                 $"    \"comments\": \"Install {Date} by {Tech}\", " +
-                $"    \"firmware\": \"{Firmware}\"" +
+                $"    \"firmware\": \"{Firmware}\", " +
+                $"    \"sessionInfo\": \"{session.Keys.ToString()}\"" +
                 $"}}";
             return output;
         }

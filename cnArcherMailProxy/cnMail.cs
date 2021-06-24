@@ -5,10 +5,11 @@ using Newtonsoft.Json;
 using System.Net.Mail;
 using System.Configuration;
 using System.Net;
+using System.Web.SessionState;
 
 namespace cnArcherMailProxy
 {
-    public class cnMail : IHttpHandler
+    public class cnMail : IHttpHandler, IRequiresSessionState
     {
         private static string _cnMailServer = ConfigurationManager.AppSettings["cnMailServer"];
         private static string _cnUsername = ConfigurationManager.AppSettings["cnUsername"];
@@ -30,9 +31,9 @@ namespace cnArcherMailProxy
 
         public void ProcessRequest(HttpContext context)
         {
-            if (context is null)
+            if (context is null  || context.Session is null)
             {
-                throw new ArgumentNullException(nameof(context), "The context was empty!");
+                throw new ArgumentNullException(nameof(context), "The context or session was empty!");
             }
 
             HttpRequest Request = context.Request;
@@ -42,12 +43,11 @@ namespace cnArcherMailProxy
             MailRequest jsonRequest = JsonConvert.DeserializeObject<MailRequest>(stream.ReadToEnd());
             stream.Dispose();
 
-            var result = composeMail(jsonRequest);
-
+            var result = composeMailAndSend(jsonRequest, context.Session);
             if (result)
             {
                 Response.ContentType = "text/json";
-                Response.Write(jsonRequest.ToCnArcherJSON());
+                Response.Write(jsonRequest.ToCnArcherJSON(context.Session));
             } else
             {
                 throw new SmtpException("Failed to send message!");
@@ -64,17 +64,21 @@ namespace cnArcherMailProxy
             return String.Join(", ", phoneArray);
         }
 
-        public static bool composeMail(MailRequest mailInfo)
+        public static bool composeMailAndSend(MailRequest mailInfo, HttpSessionState session)
         {
+            if (mailInfo is null)
+            {
+                throw new ArgumentNullException("Mail Request is null");
+            }
+
             var MailText = $"<p><span style='font-size:24px;'>cn<strong>Archer</span></p>" +
                 $"<p><b>EIP/AccountID:</b> {mailInfo.EIP} / {mailInfo.Account}<br/>" +
                 $"<b>Customer:</b> {mailInfo.Name}<br/>" +
                 $"<b>Company:</b> {mailInfo.Company}<br/>" +
                 $"<b>Phone:</b> {phonesWithLinks(mailInfo.Phones)}<br/>" +
                 $"<b>Installation Date:</b> {mailInfo.Date}<br/>" +
-                $"<b>Address:</b> <br/><div style='margin-left: 20px; margin-top:0;padding-top:0;'>{mailInfo.Address.Replace("\n", "<br/>")}</div>";
-
-            MailText += $"<p><b>ESN:</b> {mailInfo.ESN}</p><p>" + 
+                $"<b>Address:</b> <br/><div style='margin-left: 20px; margin-top:0;padding-top:0;'>{mailInfo.Address.Replace("\n", "<br/>")}</div>" +
+                $"<p><b>ESN:</b> {mailInfo.ESN}</p><p>" + 
                 $"<b>Package:</b> {mailInfo.Package}<br/>" +
                 $"<b>Type:</b> {(mailInfo.VLAN == "20" ? "PPPoE" : "StaticIP")}" +
                 (mailInfo.VLAN == "20" ? $"<br/><b>Username:</b> {mailInfo.Username}<br/><b>Password</b>: {mailInfo.Password}" :"");
@@ -88,7 +92,7 @@ namespace cnArcherMailProxy
             _m.Subject = $"New Workorder [{mailInfo.Date}]: {mailInfo.Name} ({mailInfo.EIP})";
             _m.Body = MailText;
 
-            var textBytes = System.Text.Encoding.UTF8.GetBytes(mailInfo.ToCnArcherJSON());
+            var textBytes = System.Text.Encoding.UTF8.GetBytes(mailInfo.ToCnArcherJSON(session));
             MemoryStream ms = new MemoryStream(textBytes, 0, textBytes.Length);
             _m.Attachments.Add(new Attachment(ms, $"{mailInfo.ESN}.cnarcher"));
 

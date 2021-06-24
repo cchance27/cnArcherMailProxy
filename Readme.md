@@ -1,4 +1,4 @@
-This project contains an ASP.NET 2.0 HTTPHandler that handles converting a JSON Post 
+This project contains an ASP.NET 4.0 HTTPHandler that handles converting a JSON Post 
 to an email containing a cnArcher file that can be used to generate a mobile workorder.
 
 The HTTP Handler handles posts to *.cnMail for example http://localhost/send.cnMail
@@ -26,21 +26,24 @@ Example JSON expected by this HTTP Handler:
 
 Once your DLL is built and copied to your webapps /bin directory some adjustments are required to EngageIP's web.config to enable the new handler.
 
-<appSettings>
-   <add key="cnMailServer" value="hostnameForSmtpServer" />
-   <add key="cnUsername" value="usernameForSmtp" />
-   <add key="cnPassword" value="passwordForSmtp" />
-   <add key="cnFromAddress" value="noreply@something.com" />
-   <add key="cnMailIsSSL" value="true" />
-   <add key="cnMailPort" value="587" />
-</appSettings>
-<system.web>
-  <httpHandlers>
-    <add verb="POST" path="*.cnMail" type="cnArcherProxy.cnMail, cnArcherProxy" />
-  </httpHandlers>
-</system.web>
-<system.webServer>
-  <handlers>
-    <add name="cnArcherProxy" path="*.cnMail" verb="POST" modules="IsapiModule" scriptProcessor="%windir%\Microsoft.NET\Framework64\v2.0.50727\aspnet_isapi.dll" resourceType="Unspecified" requireAccess="Script" preCondition="bitness64" />
-  </handlers>
-</system.webServer>
+<configuration>
+  <appSettings>
+	<add key="cnMailServer" value="my.emailserver.com" />
+	<add key="cnUsername" value="cnArcher" />
+	<add key="cnPassword" value="password" />
+	<add key="cnFromAddress" value="noreply@emailserver.com" />
+	<add key="cnMailIsSSL" value="false" />
+	<add key="cnMailPort" value="587" />
+  </appSettings>
+  <system.web>
+    <httpHandlers>
+      <add verb="POST" path="*.cnMail" type="cnArcherMailProxy.cnMail, cnArcherMailProxy" />
+    </httpHandlers>
+  </system.web>
+  <system.webServer>
+    <handlers accessPolicy="Read, Script">
+      <remove name="cnmail" />
+      <add name="cnmail" path="*.cnmail" verb="POST" type="cnArcherMailProxy.cnMail, cnArcherMailProxy" modules="IsapiModule" scriptProcessor="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\aspnet_isapi.dll" resourceType="Unspecified" requireAccess="None" preCondition="classicMode,runtimeVersionv4.0,bitness64" />
+    </handlers>
+  </system.webServer>
+</configuration>
